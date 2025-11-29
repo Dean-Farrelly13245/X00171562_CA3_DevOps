@@ -4,3 +4,5 @@ pylint
 bandit
 pip-audit
 flask
+selenium
+webdriver-manager
