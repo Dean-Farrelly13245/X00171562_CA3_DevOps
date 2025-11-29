@@ -1,0 +1,37 @@
+#Runs the pipeline when code is pushed to these branches
+trigger:
+  branches: { include: [main, development] }
+
+#Runs the pipeline when a pull request is made to these branches
+pr:
+  branches: { include: [main, development] }
+
+#Choosing the build machine
+pool:
+  vmImage: "ubuntu-latest"
+
+steps:
+  #python version
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "3.11"
+      addToPath: true
+
+  - script: pip install -r requirements.txt
+    displayName: Install Dependencies
+
+  - script: pylint --disable=C0114,C0116,C0103,C0301 --fail-under=8.5 Calculator/**/*.py
+    displayName: Run Pylint
+
+  - script: pytest --cov=Calculator --cov-report=xml --junitxml=pytest-results.xml --cov-fail-under=80
+    displayName: Run Tests with Coverage Check
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFiles: "pytest-results.xml"
+      testResultsFormat: "JUnit"
+
+  - task: PublishCodeCoverageResults@2
+    inputs:
+      codeCoverageTool: "Cobertura"
+      summaryFileLocation: "coverage.xml"
