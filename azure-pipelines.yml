@@ -35,3 +35,19 @@ steps:
     inputs:
       codeCoverageTool: "Cobertura"
       summaryFileLocation: "coverage.xml"
+
+  - script: |
+      bandit -r Calculator > bandit-report.txt
+    displayName: Run Bandit Security Scan
+    continueOnError: true
+
+  - script: pip-audit > pip-audit-report.txt
+    displayName: Run pip-audit Scan
+    continueOnError: true
+
+  - task: PublishBuildArtifacts@2
+    inputs:
+      PathtoPublish: "."
+      ArtifactName: "security-reports"
+      publishLocation: "Container"
+    displayName: Publish Security Reports
