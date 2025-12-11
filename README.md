@@ -58,7 +58,7 @@ This project is a continuation from my CA1 Calculator app where i implement a fu
 
     all four operations and main are unit tested.
 
-    The app now has a Flash web interface with a simple UI to use the calculator , this is fully tested using selenium.
+    The app now has a Flask web interface with a simple UI to use the calculator , this is fully tested using selenium.
     Deployed to Azure App Services - Test and Production.
 
 ## CI Pipeline Implementation
@@ -139,14 +139,14 @@ This project is a continuation from my CA1 Calculator app where i implement a fu
    UAT stage ensures the UI works correctly.
    The UAT Stage does the following:
       Installs dependencies
-      Starts the flash app
+      Starts the flask app
       Runs Selenium tests
       validates page load and calculator operations.
       publishes results
       
 ## Pipeline Approval Gates
    the production environment in azure requires manual approval:
-      Human must approve production employment.
+      Human must approve production deployment.
       Test deployment must be successful.
        
 ## Branch Policies and Protection
@@ -211,3 +211,4 @@ Branch Protection Warning on GitHub
 
 Security scans fail
 Fix: update dependencies.
+
