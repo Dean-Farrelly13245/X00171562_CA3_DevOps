@@ -40,9 +40,9 @@ stages:
             displayName: 'Run Pylint Static Analysis'
 
           - script: |
-              pytest --cov=Calculator --cov-report=xml --junitxml=pytest-results.xml --cov-fail-under=80 --ignore=tests/selenium
+              export PYTHONPATH=$PWD
+              pytest Calculator/ tests/ --cov=Calculator --cov-report=xml --junitxml=pytest-results.xml --cov-fail-under=80 --ignore=tests/selenium --ignore=tests/perf
             displayName: 'Run Unit Tests with Coverage'
-            continueOnError: true
 
           - script: |
               export PYTHONPATH=$PWD
