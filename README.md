@@ -96,10 +96,10 @@ This project is a continuation from my CA1 Calculator app where i implement a fu
             Pushes are made to main or development branch.
             Pull Requests are made to the main or development Branch.
 
-Pipeline – Successful Run
-<img width="1049" height="264" alt="pipeline_sucess" src="https://github.com/user-attachments/assets/78f46148-d684-43b3-8182-c9a38ddfc8a9" />
-Test Results
-<img width="1565" height="228" alt="Tests_passed" src="https://github.com/user-attachments/assets/e46cfac4-533b-4d0a-903c-92ae52c6ad49" />
+## Pipeline – Successful Run
+   <img width="1049" height="264" alt="pipeline_sucess" src="https://github.com/user-attachments/assets/78f46148-d684-43b3-8182-c9a38ddfc8a9" />
+## Test Results
+   <img width="1565" height="228" alt="Tests_passed" src="https://github.com/user-attachments/assets/e46cfac4-533b-4d0a-903c-92ae52c6ad49" />
 Environments
 <img width="621" height="298" alt="deployed_enviroments" src="https://github.com/user-attachments/assets/336d5808-b4d9-43a3-b2a0-3402e0ed7618" />
 Coverage Summary
@@ -160,5 +160,6 @@ Ensure Azure Pipelines contains the same installation step:
 
 Branch Protection Warning on GitHub
     GitHub Free accounts do not enforce branch protection on private repos anymore.
+
 
 
