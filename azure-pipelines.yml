@@ -1,76 +1,63 @@
-# Runs on pushes and PRs to main/development branches
 trigger:
   branches:
     include:
       - main
       - development
-
 pr:
   branches:
     include:
       - main
       - development
-
-# Variables
 variables:
   pythonVersion: '3.11'
-  azureServiceConnection: ''
-  testAppServiceName: 'calculator-test-X00171562'
-  prodAppServiceName: 'calculator-prod-X00171562'
+  azureServiceConnection: 'sc-devops-ca3-mi'
+  testAppServiceName: 'ca3-test-dean'
+  prodAppServiceName: 'ca3-prod-dean'
 
 pool:
   vmImage: 'ubuntu-latest'
 
 stages:
-  # Build
   - stage: Build
     displayName: 'Build and Test'
     jobs:
       - job: BuildJob
         displayName: 'Build Application'
         steps:
-          # Python setup
           - task: UsePythonVersion@0
             inputs:
               versionSpec: $(pythonVersion)
               addToPath: true
 
-          # Install dependencies
           - script: |
               pip install -r requirements.txt
             displayName: 'Install Dependencies'
 
-          # Static code analysis
           - script: |
               pylint --disable=C0114,C0116,C0103,C0301 --fail-under=8.5 Calculator/**/*.py
             displayName: 'Run Pylint Static Analysis'
 
-          # Unit tests with coverage
           - script: |
               pytest --cov=Calculator --cov-report=xml --junitxml=pytest-results.xml --cov-fail-under=80
             displayName: 'Run Unit Tests with Coverage'
 
-          # Performance testing
           - script: |
               pytest tests/perf/test_perf.py -v --junitxml=perf-results.xml
             displayName: 'Run Performance Tests'
             continueOnError: true
 
-          # Publish test results
           - task: PublishTestResults@2
             inputs:
               testResultsFiles: 'pytest-results.xml;perf-results.xml'
               testResultsFormat: 'JUnit'
             displayName: 'Publish Test Results'
 
-          # Publish code coverage
+
           - task: PublishCodeCoverageResults@2
             inputs:
               codeCoverageTool: 'Cobertura'
               summaryFileLocation: 'coverage.xml'
             displayName: 'Publish Code Coverage'
-
-          # Security testing
           - script: |
               pip install bandit
               bandit -r Calculator -f json -o bandit-report.json || true
@@ -85,7 +72,7 @@ stages:
             displayName: 'Run pip-audit Dependency Scan'
             continueOnError: true
 
-          # Publish build artifacts
+
           - task: PublishBuildArtifacts@2
             inputs:
               PathtoPublish: '$(System.DefaultWorkingDirectory)'
@@ -93,7 +80,6 @@ stages:
               publishLocation: 'Container'
             displayName: 'Publish Build Artifacts'
 
-          # Publish security and performance reports
           - task: PublishBuildArtifacts@2
             inputs:
               PathtoPublish: '$(System.DefaultWorkingDirectory)'
@@ -101,7 +87,6 @@ stages:
               publishLocation: 'Container'
             displayName: 'Publish Test Reports'
 
-  #UAT Testing
   - stage: UAT
     displayName: 'User Acceptance Testing'
     dependsOn: Build
@@ -127,19 +112,16 @@ stages:
             env:
               FLASK_APP: app.py
 
-          # Run Selenium UAT tests
           - script: |
               pytest tests/selenium/test_ui.py -v --junitxml=selenium-results.xml
             displayName: 'Run Selenium UAT Tests'
 
-          # Publish UAT test results
           - task: PublishTestResults@2
             inputs:
               testResultsFiles: 'selenium-results.xml'
               testResultsFormat: 'JUnit'
             displayName: 'Publish UAT Test Results'
 
-  # Deploy to Test Environment
   - stage: DeployTest
     displayName: 'Deploy to Test Environment'
     dependsOn: 
@@ -154,20 +136,20 @@ stages:
           runOnce:
             deploy:
               steps:
+                - download: current
+                  artifact: app-artifacts
                 - task: AzureWebApp@1
                   inputs:
                     azureSubscription: $(azureServiceConnection)
                     appName: $(testAppServiceName)
                     package: '$(Pipeline.Workspace)/app-artifacts'
                     runtimeStack: 'PYTHON|3.11'
-                    startUpCommand: 'gunicorn --bind 0.0.0.0:8000 --timeout 600 app:app'
                   displayName: 'Deploy to Test App Service'
 
                 - script: |
                     echo "Deployment to Test environment completed"
                   displayName: 'Verify Test Deployment'
 
-  # Stage 4: Deploy to Production Environment
   - stage: DeployProd
     displayName: 'Deploy to Production Environment'
     dependsOn: DeployTest
@@ -180,13 +162,14 @@ stages:
           runOnce:
             deploy:
               steps:
+                - download: current
+                  artifact: app-artifacts
                 - task: AzureWebApp@1
                   inputs:
                     azureSubscription: $(azureServiceConnection)
                     appName: $(prodAppServiceName)
                     package: '$(Pipeline.Workspace)/app-artifacts'
                     runtimeStack: 'PYTHON|3.11'
-                    startUpCommand: 'gunicorn --bind 0.0.0.0:8000 --timeout 600 app:app'
                   displayName: 'Deploy to Production App Service'
 
                 - script: |
