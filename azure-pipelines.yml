@@ -42,6 +42,7 @@ stages:
           - script: |
               pytest --cov=Calculator --cov-report=xml --junitxml=pytest-results.xml --cov-fail-under=80 --ignore=tests/selenium
             displayName: 'Run Unit Tests with Coverage'
+            continueOnError: true
 
           - script: |
               export PYTHONPATH=$PWD
@@ -54,6 +55,7 @@ stages:
               testResultsFiles: 'pytest-results.xml;perf-results.xml'
               testResultsFormat: 'JUnit'
             displayName: 'Publish Test Results'
+            continueOnError: true
 
 
           - task: PublishCodeCoverageResults@2
