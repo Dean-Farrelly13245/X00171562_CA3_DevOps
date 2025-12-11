@@ -110,8 +110,8 @@ This project is a continuation from my CA1 Calculator app where i implement a fu
 
 ## Environment Setup
    My project uses two Azure app services:
-      calculator-test-X00171562 – Test environment
-      calculator-prod-X00171562 – Production environment
+      Test environment- environmentcalculator-test-X00171562.
+      Production environment - calculator-prod-X00171562.
       
    Azure uses a secure managed indentity service connection:
       Service connection: sc-devops-ca3-mi
@@ -145,11 +145,10 @@ This project is a continuation from my CA1 Calculator app where i implement a fu
       publishes results
       
 ## Pipeline Approval Gates
-
-
-
-
-      
+   the production environment in azure requires manual approval:
+      Human must approve production employment.
+      Test deployment must be successful.
+       
 ## Branch Policies and Protection
 
     My project is setup to use a main and development branch.
@@ -162,14 +161,9 @@ This project is a continuation from my CA1 Calculator app where i implement a fu
         disabled direct pushes
         branch must be up to date before merging
 
-Main Branch Protection Rules
+## Main Branch Protection Rules
 <img width="692" height="830" alt="Branchpol1" src="https://github.com/user-attachments/assets/6dc297eb-91de-477e-97af-817d51e811ed" />
 <img width="692" height="125" alt="branchpol2" src="https://github.com/user-attachments/assets/afd3f376-aed3-440d-9366-dcc25a21f9eb" />
-
-
-    NOTE!
-    I setup the branch rules fully but get the error "Your protected branch rules for your branch won't be enforced on this private repository until you move to a GitHub Team or Enterprise organization account." - the CA Brief states the github repo must be private so i kept it as private.
-<img width="770" height="144" alt="Screenshot 2025-11-13 153628" src="https://github.com/user-attachments/assets/303f925a-4cf4-4d0c-afc8-8c7920974699" />
 
 Pull Request 
 <img width="836" height="625" alt="pullRequest" src="https://github.com/user-attachments/assets/c136aff0-6e35-44d2-811c-2032198fa61a" />
@@ -180,8 +174,17 @@ Pull Request
         All my arithmetic functions
         Division by 0 error handling
         CLI behaviour using monkeypatch to mimic user input and capsys to validate printed output
+       My Code Coverage currently is over 95%.
 
-    My Code Coverage currently is over 95%.
+   Performance Tests:
+      timing based test simulating load 
+
+   Security Tests:
+      Bandit - static code analysis
+      pip audit - CVE scan
+
+   Selenium UAT Tests:
+      Validates UI behaviour using browser automation
 
 
 
@@ -206,5 +209,5 @@ Branch Protection Warning on GitHub
     GitHub Free accounts do not enforce branch protection on private repos anymore.
 
 
-
-
+Security scans fail
+Fix: update dependencies.
