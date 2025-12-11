@@ -86,7 +86,7 @@ This project is a continuation from my CA1 Calculator app where i implement a fu
 
         Runs selenium UAT tests to validate flask web interface.
 
-        Deploys application to Azure test environment using a Managed Indentity service connection
+        Deploys application to Azure test environment.
 
         Requires manual approval before deploying the same build to the production environment.
 
@@ -98,14 +98,58 @@ This project is a continuation from my CA1 Calculator app where i implement a fu
 
 ## Pipeline – Successful Run
    <img width="1049" height="264" alt="pipeline_sucess" src="https://github.com/user-attachments/assets/78f46148-d684-43b3-8182-c9a38ddfc8a9" />
+   
 ## Test Results
    <img width="1565" height="228" alt="Tests_passed" src="https://github.com/user-attachments/assets/e46cfac4-533b-4d0a-903c-92ae52c6ad49" />
-Environments
+   
+## Environments
 <img width="621" height="298" alt="deployed_enviroments" src="https://github.com/user-attachments/assets/336d5808-b4d9-43a3-b2a0-3402e0ed7618" />
-Coverage Summary
+
+## Coverage Summary
 <img width="606" height="267" alt="Code_Coverage" src="https://github.com/user-attachments/assets/254946cc-7b2f-45fc-a463-d419de2577b1" />
 
+## Environment Setup
+   My project uses two Azure app services:
+      calculator-test-X00171562 – Test environment
+      calculator-prod-X00171562 – Production environment
+      
+   Azure uses a secure managed indentity service connection:
+      Service connection: sc-devops-ca3-mi
 
+## Deployment Process
+   1. New commit is made
+   2. Build stage runs tests , linting , coverage and security scans.
+   3. UAT stage runs Selenium tests
+   4. if sucessful the app deploys to the test environment
+   5. pipeline pauses and waits for manual approval
+   6. once approved, deploys to production environment
+
+## Security and Performance Testing
+   Security scanning:
+      Bandit: checks python code for vulnerabilities
+      pip-audit: checks dependencies for vulnerabilities
+      Reports stored as pipeline artefacts 
+
+   Performance Testing:
+      Pytest performance test measures calculator speed.
+      Ensures operations run within an acceptable time.
+      publishes results to azure
+
+## UAT Testing
+   UAT stage ensures the UI works correctly.
+   The UAT Stage does the following:
+      Installs dependencies
+      Starts the flash app
+      Runs Selenium tests
+      validates page load and calculator operations.
+      publishes results
+      
+## Pipeline Approval Gates
+
+
+
+
+      
 ## Branch Policies and Protection
 
     My project is setup to use a main and development branch.
@@ -160,6 +204,7 @@ Ensure Azure Pipelines contains the same installation step:
 
 Branch Protection Warning on GitHub
     GitHub Free accounts do not enforce branch protection on private repos anymore.
+
 
 
 
