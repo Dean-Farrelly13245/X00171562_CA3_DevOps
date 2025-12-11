@@ -1,42 +1,47 @@
 # Project Name
 
-    Basic calculator app
+   CI/CD pipeline for Basic calculator app
 
 ## Overview
-
-    I have created a basic calculator app with 4 different features - add, subtract, divide, multiply.
-    I have implemented a CI pipeline into my project with the aim to demostrate DevOps practices.
-
-    My goals are :
-    Version control workflow.
-    Pull requests
-    Automated building and testing.
-    Enfoced test coverage of 80%
-    Azure pipelines CI
-    Code analysis
-    Branch protection
-    documentation
+This project is a continuation from my CA1 Calculator app where i implement a full CI/CD pipeline which does the following:
+    Multi stage YAML pipeline
+    Automated testing
+    static code analysis
+    security scanning
+    deployment to both test and production enviorments
+    approval gates
 
 ## Technologies Used
 
-    YAML
-    GitHub
+## Application
     Python
+    Flask
+    HTML
+
+## Testing
     PyTest
     PyTest-cov
+    Selenium
+    Bandit
     Pylint
+    pip-audit
+
+## DevOps
     Azure pipelines
+    Azure App Service
+    Multi-Stage YAML
+    Azure Environments
 
 ## Local Development Setup
 
     1 Clone the repo
-        git clone https://github.com/Dean-Farrelly13245/X00171562_CA2_DevOps.git
+        git clone https://github.com/Dean-Farrelly13245/X00171562_CA3_DevOps.git
 
     2 Install Dependencies
         pip install -r requirements.txt
 
     3 Run Application
-        python Calculator/calculator.py
+        python app.py
 
     4 Run tests and code coverage
         pytest --cov=Calculator --cov-fail-under=80
@@ -53,9 +58,12 @@
 
     all four operations and main are unit tested.
 
+    The app now has a Flash web interface with a simple UI to use the calculator , this is fully tested using selenium.
+    Deployed to Azure App Services - Test and Production.
+
 ## CI Pipeline Implementation
 
-    I have created my pipeline in azure-pipelines.yml
+    I have updated my pipeline in azure-pipelines.yml
 
     This pipeline does the following :
         Uses UsePythonVersion@0 to select Python 3.11
@@ -64,9 +72,23 @@
 
         Runs Pylint using a minimun score requirement.
 
-        Executes Tests by running "pytest --cov=Calculator --cov-report=xml --cov-fail-under=80" which also checks for code coverage is above 80%.
+        Executes Unit Tests by running "pytest --cov=Calculator --cov-report=xml --cov-fail-under=80" which also checks for code coverage is above 80%.
 
-        Unit test results visible in Azure Pipelines.
+        Runs a performance test using a pytest timing loop
+
+        Runs security tests:
+            Bandit: source code security scan.
+            pip-audit: dependency vulnerability scanner.
+
+        publishes test results and code coverage to Azure.
+
+        Publishes a build artefact which is used for deployment to both environments
+
+        Runs selenium UAT tests to validate flask web interface.
+
+        Deploys application to Azure test environment using a Managed Indentity service connection
+
+        Requires manual approval before deploying the same build to the production environment.
 
         XML coverage uploaded for reporting.
 
@@ -75,11 +97,13 @@
             Pull Requests are made to the main or development Branch.
 
 Pipeline – Successful Run
-<img width="1553" height="165" alt="TestsPassedandcoverage" src="https://github.com/user-attachments/assets/1497dec9-8ddf-477a-9c62-c536c08cd456" />
+<img width="1049" height="264" alt="pipeline_sucess" src="https://github.com/user-attachments/assets/78f46148-d684-43b3-8182-c9a38ddfc8a9" />
 Test Results
-<img width="1554" height="217" alt="testssummary" src="https://github.com/user-attachments/assets/9fa7c1ce-b8d6-479e-82cc-e2b9500c4b1e" /> 
+<img width="1565" height="228" alt="Tests_passed" src="https://github.com/user-attachments/assets/e46cfac4-533b-4d0a-903c-92ae52c6ad49" />
+Environments
+<img width="621" height="298" alt="deployed_enviroments" src="https://github.com/user-attachments/assets/336d5808-b4d9-43a3-b2a0-3402e0ed7618" />
 Coverage Summary
-<img width="609" height="277" alt="CoverageSummary" src="https://github.com/user-attachments/assets/f964804f-bb58-4bbc-a9c2-da02eb45b923" />
+<img width="606" height="267" alt="Code_Coverage" src="https://github.com/user-attachments/assets/254946cc-7b2f-45fc-a463-d419de2577b1" />
 
 
 ## Branch Policies and Protection
@@ -136,4 +160,5 @@ Ensure Azure Pipelines contains the same installation step:
 
 Branch Protection Warning on GitHub
     GitHub Free accounts do not enforce branch protection on private repos anymore.
+
 
