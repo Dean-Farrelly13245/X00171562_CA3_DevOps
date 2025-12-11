@@ -8,6 +8,7 @@ pr:
     include:
       - main
       - development
+
 variables:
   pythonVersion: '3.11'
   azureServiceConnection: 'sc-devops-ca3-mi'
@@ -18,6 +19,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 stages:
+  # Stage 1 : build the app and run all tests
   - stage: Build
     displayName: 'Build and Test'
     jobs:
@@ -88,6 +90,7 @@ stages:
               publishLocation: 'Container'
             displayName: 'Publish Test Reports'
 
+  # Stage 2: run user acceptance tests with Selenium
   - stage: UAT
     displayName: 'User Acceptance Testing'
     dependsOn: Build
@@ -123,6 +126,7 @@ stages:
               testResultsFormat: 'JUnit'
             displayName: 'Publish UAT Test Results'
 
+  # Stage 3: deploy to test environment
   - stage: DeployTest
     displayName: 'Deploy to Test Environment'
     dependsOn: 
@@ -151,6 +155,7 @@ stages:
                     echo "Deployment to Test environment completed"
                   displayName: 'Verify Test Deployment'
 
+  # Stage 4 : deploy to production
   - stage: DeployProd
     displayName: 'Deploy to Production Environment'
     dependsOn: DeployTest
