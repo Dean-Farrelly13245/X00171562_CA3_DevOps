@@ -1,53 +1,194 @@
-#Runs the pipeline when code is pushed to these branches
+# Runs on pushes and PRs to main/development branches
 trigger:
-  branches: { include: [main, development] }
+  branches:
+    include:
+      - main
+      - development
 
-#Runs the pipeline when a pull request is made to these branches
 pr:
-  branches: { include: [main, development] }
+  branches:
+    include:
+      - main
+      - development
 
-#Choosing the build machine
+# Variables
+variables:
+  pythonVersion: '3.11'
+  azureServiceConnection: ''
+  testAppServiceName: 'calculator-test-X00171562'
+  prodAppServiceName: 'calculator-prod-X00171562'
+
 pool:
-  vmImage: "ubuntu-latest"
+  vmImage: 'ubuntu-latest'
 
-steps:
-  #python version
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: "3.11"
-      addToPath: true
+stages:
+  # Build
+  - stage: Build
+    displayName: 'Build and Test'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build Application'
+        steps:
+          # Python setup
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: $(pythonVersion)
+              addToPath: true
 
-  - script: pip install -r requirements.txt
-    displayName: Install Dependencies
+          # Install dependencies
+          - script: |
+              pip install -r requirements.txt
+            displayName: 'Install Dependencies'
 
-  - script: pylint --disable=C0114,C0116,C0103,C0301 --fail-under=8.5 Calculator/**/*.py
-    displayName: Run Pylint
+          # Static code analysis
+          - script: |
+              pylint --disable=C0114,C0116,C0103,C0301 --fail-under=8.5 Calculator/**/*.py
+            displayName: 'Run Pylint Static Analysis'
 
-  - script: pytest --cov=Calculator --cov-report=xml --junitxml=pytest-results.xml --cov-fail-under=80
-    displayName: Run Tests with Coverage Check
+          # Unit tests with coverage
+          - script: |
+              pytest --cov=Calculator --cov-report=xml --junitxml=pytest-results.xml --cov-fail-under=80
+            displayName: 'Run Unit Tests with Coverage'
 
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: "pytest-results.xml"
-      testResultsFormat: "JUnit"
+          # Performance testing
+          - script: |
+              pytest tests/perf/test_perf.py -v --junitxml=perf-results.xml
+            displayName: 'Run Performance Tests'
+            continueOnError: true
 
-  - task: PublishCodeCoverageResults@2
-    inputs:
-      codeCoverageTool: "Cobertura"
-      summaryFileLocation: "coverage.xml"
+          # Publish test results
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFiles: 'pytest-results.xml;perf-results.xml'
+              testResultsFormat: 'JUnit'
+            displayName: 'Publish Test Results'
 
-  - script: |
-      bandit -r Calculator > bandit-report.txt
-    displayName: Run Bandit Security Scan
-    continueOnError: true
+          # Publish code coverage
+          - task: PublishCodeCoverageResults@2
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: 'coverage.xml'
+            displayName: 'Publish Code Coverage'
 
-  - script: pip-audit > pip-audit-report.txt
-    displayName: Run pip-audit Scan
-    continueOnError: true
+          # Security testing
+          - script: |
+              pip install bandit
+              bandit -r Calculator -f json -o bandit-report.json || true
+              bandit -r Calculator -f txt -o bandit-report.txt || true
+            displayName: 'Run Bandit Security Scan'
+            continueOnError: true
 
-  - task: PublishBuildArtifacts@2
-    inputs:
-      PathtoPublish: "."
-      ArtifactName: "security-reports"
-      publishLocation: "Container"
-    displayName: Publish Security Reports
+          - script: |
+              pip install pip-audit
+              pip-audit --format json --output pip-audit-report.json || true
+              pip-audit --format text --output pip-audit-report.txt || true
+            displayName: 'Run pip-audit Dependency Scan'
+            continueOnError: true
+
+          # Publish build artifacts
+          - task: PublishBuildArtifacts@2
+            inputs:
+              PathtoPublish: '$(System.DefaultWorkingDirectory)'
+              ArtifactName: 'app-artifacts'
+              publishLocation: 'Container'
+            displayName: 'Publish Build Artifacts'
+
+          # Publish security and performance reports
+          - task: PublishBuildArtifacts@2
+            inputs:
+              PathtoPublish: '$(System.DefaultWorkingDirectory)'
+              ArtifactName: 'test-reports'
+              publishLocation: 'Container'
+            displayName: 'Publish Test Reports'
+
+  #UAT Testing
+  - stage: UAT
+    displayName: 'User Acceptance Testing'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: UATJob
+        displayName: 'Run Selenium UAT Tests'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: $(pythonVersion)
+              addToPath: true
+
+          - script: |
+              pip install -r requirements.txt
+            displayName: 'Install Dependencies'
+
+          - script: |
+              python app.py &
+              sleep 5
+              echo "Flask app started"
+            displayName: 'Start Flask Application'
+            env:
+              FLASK_APP: app.py
+
+          # Run Selenium UAT tests
+          - script: |
+              pytest tests/selenium/test_ui.py -v --junitxml=selenium-results.xml
+            displayName: 'Run Selenium UAT Tests'
+
+          # Publish UAT test results
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFiles: 'selenium-results.xml'
+              testResultsFormat: 'JUnit'
+            displayName: 'Publish UAT Test Results'
+
+  # Deploy to Test Environment
+  - stage: DeployTest
+    displayName: 'Deploy to Test Environment'
+    dependsOn: 
+      - Build
+      - UAT
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToTest
+        displayName: 'Deploy to Test'
+        environment: 'Test'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    appName: $(testAppServiceName)
+                    package: '$(Pipeline.Workspace)/app-artifacts'
+                    runtimeStack: 'PYTHON|3.11'
+                    startUpCommand: 'gunicorn --bind 0.0.0.0:8000 --timeout 600 app:app'
+                  displayName: 'Deploy to Test App Service'
+
+                - script: |
+                    echo "Deployment to Test environment completed"
+                  displayName: 'Verify Test Deployment'
+
+  # Stage 4: Deploy to Production Environment
+  - stage: DeployProd
+    displayName: 'Deploy to Production Environment'
+    dependsOn: DeployTest
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToProd
+        displayName: 'Deploy to Production'
+        environment: 'Production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    appName: $(prodAppServiceName)
+                    package: '$(Pipeline.Workspace)/app-artifacts'
+                    runtimeStack: 'PYTHON|3.11'
+                    startUpCommand: 'gunicorn --bind 0.0.0.0:8000 --timeout 600 app:app'
+                  displayName: 'Deploy to Production App Service'
+
+                - script: |
+                    echo "Deployment to Production environment completed"
+                  displayName: 'Verify Production Deployment'

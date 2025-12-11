@@ -6,3 +6,4 @@ pip-audit
 flask
 selenium
 webdriver-manager
+gunicorn
