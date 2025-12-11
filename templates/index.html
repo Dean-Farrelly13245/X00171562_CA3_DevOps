@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calculator</title>
+</head>
+<body>
+    <h1>Web Calculator</h1>
+
+    <form method="POST">
+        <input id="num1" name="num1" type="number" step="any" required>
+        <input id="num2" name="num2" type="number" step="any" required>
+
+        <button id="add" name="operation" value="add">Add</button>
+        <button id="subtract" name="operation" value="subtract">Subtract</button>
+        <button id="multiply" name="operation" value="multiply">Multiply</button>
+        <button id="divide" name="operation" value="divide">Divide</button>
+    </form>
+
+    {% if result is not none %}
+        <h2 id="result">Result: {{ result }}</h2>
+    {% endif %}
+</body>
+</html>
