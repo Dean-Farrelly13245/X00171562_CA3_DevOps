@@ -11,8 +11,8 @@ pr:
 variables:
   pythonVersion: '3.11'
   azureServiceConnection: 'sc-devops-ca3-mi'
-  testAppServiceName: 'ca3-test-X00171562'
-  prodAppServiceName: 'ca3-prod-X00171562'
+  testAppServiceName: 'calculator-test-X00171562'
+  prodAppServiceName: 'calculator-prod-X00171562'
 
 pool:
   vmImage: 'ubuntu-latest'
